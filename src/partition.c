@@ -3,40 +3,49 @@
 void print_usage(const char *program_name) {
     printf("Usage: %s [OPTIONS]\n", basename((char *)program_name));
     printf("Options:\n");
-    printf("  -b, --backup PARTITIONS     Backup partitions (comma-separated)\n");
-    printf("  -d, --directory DIR         Backup directory (default: current)\n");
-    printf("  -l, --list                  List available partitions\n");
+    printf("  -b, --backup                Backup modem partitions (md1img_a, nvcfg, nvdata, nvram)\n");
+    printf("  -f, --folder FOLDER         Backup to specific folder (USA or Stock)\n");
+    printf("  -l, --list                  List target modem partitions\n");
     printf("  -h, --help                  Show help\n");
+    printf("\nTarget modem partitions: md1img_a, nvcfg, nvdata, nvram\n");
+    printf("Default backup location: /sdcard/bands/\n");
 }
 
 int parse_arguments(int argc, char *argv[], program_args_t *args) {
     int c;
     static struct option long_options[] = {
-        {"backup", required_argument, 0, 'b'},
-        {"directory", required_argument, 0, 'd'},
+        {"backup", no_argument, 0, 'b'},
+        {"folder", required_argument, 0, 'f'},
         {"list", no_argument, 0, 'l'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
 
     memset(args, 0, sizeof(program_args_t));
-    strcpy(args->backup_dir, ".");
+    strcpy(args->backup_dir, "/sdcard/bands");
+    
+    // Set target partitions
+    const char *target_partitions[] = {"md1img_a", "nvcfg", "nvdata", "nvram"};
+    int num_targets = sizeof(target_partitions) / sizeof(target_partitions[0]);
+    
+    for (int i = 0; i < num_targets; i++) {
+        strncpy(args->partitions[i], target_partitions[i], MAX_PARTITION_NAME - 1);
+        args->partitions[i][MAX_PARTITION_NAME - 1] = '\0';
+    }
+    args->partition_count = num_targets;
 
-    while ((c = getopt_long(argc, argv, "b:d:lh", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "bf:lh", long_options, NULL)) != -1) {
         switch (c) {
             case 'b':
                 args->backup_mode = 1;
-                char *token = strtok(optarg, ",");
-                while (token != NULL && args->partition_count < MAX_PARTITIONS) {
-                    strncpy(args->partitions[args->partition_count], token, MAX_PARTITION_NAME - 1);
-                    args->partitions[args->partition_count][MAX_PARTITION_NAME - 1] = '\0';
-                    args->partition_count++;
-                    token = strtok(NULL, ",");
-                }
                 break;
-            case 'd':
-                strncpy(args->backup_dir, optarg, MAX_PATH_LEN - 1);
-                args->backup_dir[MAX_PATH_LEN - 1] = '\0';
+            case 'f':
+                if (strcmp(optarg, "USA") == 0 || strcmp(optarg, "Stock") == 0) {
+                    snprintf(args->backup_dir, MAX_PATH_LEN, "/sdcard/bands/%s", optarg);
+                } else {
+                    printf("Error: Folder must be either 'USA' or 'Stock'\n");
+                    return -2;
+                }
                 break;
             case 'l':
                 args->list_mode = 1;
@@ -215,12 +224,13 @@ int search_partition_recursive(const char *base_path, const char *target, char *
 }
 
 int list_partitions(const char *partition_dir) {
-    DIR *dp;
-    struct dirent *entry;
     char full_path[MAX_PATH_LEN];
     char real_path[MAX_PATH_LEN];
     char size_str[16];
     off_t size;
+    
+    const char *target_partitions[] = {"md1img_a", "nvcfg", "nvdata", "nvram"};
+    int num_targets = sizeof(target_partitions) / sizeof(target_partitions[0]);
     
     int terminal_width = get_terminal_width();
     
@@ -250,18 +260,13 @@ int list_partitions(const char *partition_dir) {
         print_separator_line(terminal_width);
     }
     
-    dp = opendir(partition_dir);
-    if (dp == NULL) {
-        perror("opendir");
-        return -1;
-    }
-    
-    while ((entry = readdir(dp)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+    for (int i = 0; i < num_targets; i++) {
+        snprintf(full_path, sizeof(full_path), "%s/%s", partition_dir, target_partitions[i]);
+        
+        if (!file_exists(full_path)) {
+            printf("%-*s %s\n", partition_col_width, target_partitions[i], "NOT FOUND");
             continue;
         }
-        
-        snprintf(full_path, sizeof(full_path), "%s/%s", partition_dir, entry->d_name);
         
         ssize_t len = readlink(full_path, real_path, sizeof(real_path) - 1);
         if (len != -1) {
@@ -274,22 +279,29 @@ int list_partitions(const char *partition_dir) {
         format_size(size, size_str, sizeof(size_str));
         
         if (path_col_width == 0) {
-            print_truncated(entry->d_name, partition_col_width);
+            print_truncated(target_partitions[i], partition_col_width);
             printf(" %s\n", size_str);
         } else {
-            print_truncated(entry->d_name, partition_col_width);
+            print_truncated(target_partitions[i], partition_col_width);
             printf(" ");
             print_truncated(real_path, path_col_width);
             printf(" %s\n", size_str);
         }
     }
     
-    closedir(dp);
     return 0;
 }
 
 int backup_partitions(const program_args_t *args, const char *partition_dir) {
+    // Create /sdcard/bands directory structure
+    create_directory_if_not_exists("/sdcard/bands");
+    create_directory_if_not_exists("/sdcard/bands/USA");
+    create_directory_if_not_exists("/sdcard/bands/Stock");
+    
+    // Create the specific backup directory
     create_directory_if_not_exists(args->backup_dir);
+    
+    printf("Modem Utilities - Backing up to: %s\n", args->backup_dir);
     
     for (int i = 0; i < args->partition_count; i++) {
         if (backup_single_partition(args->partitions[i], partition_dir, args->backup_dir) != 0) {
