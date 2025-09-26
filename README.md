@@ -14,17 +14,8 @@ Backup and flash modem partitions on Qin F21 Pro.
 3. Access via WebUI
 
 ## Usage
-### Web Interface
-- View partitions in 2x2 grid
 - Choose USA or Stock folder
 - Backup or flash configurations
-
-### CLI
-```bash
-partition -l          # List partitions
-partition -b -f USA   # Backup to USA folder
-partition -b -f Stock # Backup to Stock folder
-```
 
 ## Directory Structure
 ```
