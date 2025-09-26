@@ -1,46 +1,41 @@
-# Partition Backup
-- This Utility Allows You To Save Android Device Partition
+# Modem Utilities
 
+Backup and flash modem partitions on Qin F21 Pro.
 
-## Requirements
-- Rooted Android Device
+## Features
+- Backup modem partitions (md1img_a, nvcfg, nvdata, nvram)
+- Flash USA or Stock modem configurations
+- Mobile-optimized UI for 480x640 screens
+- Web interface and CLI support
 
-## Installation 
-- Flash Module in KSU/APATCH/MAGISK
-- Reboot Your Device
-
+## Installation
+1. Flash module in KernelSU/APatch/Magisk
+2. Reboot device
+3. Access via WebUI
 
 ## Usage
+### Web Interface
+- View partitions in 2x2 grid
+- Choose USA or Stock folder
+- Backup or flash configurations
 
-- `CLI` and `WebUI` both are supported
-
-
-
--CLI Usage :
-```
-Usage: partition [OPTIONS]
-Options:
-  -b, --backup PARTITIONS     Backup partitions (comma-separated)
-  -d, --directory DIR         Backup directory (default: current)
-  -l, --list                  List available partitions
-  -h, --help                  Show help
-```
-- Example : To backup, boot, vendor and system to internal storage, run
-
-```
-partition -b boot,vendor,system -d /sdcard
+### CLI
+```bash
+partition -l          # List partitions
+partition -b -f USA   # Backup to USA folder
+partition -b -f Stock # Backup to Stock folder
 ```
 
+## Directory Structure
+```
+/sdcard/bands/
+├── USA/    # USA modem files
+└── Stock/  # Stock modem files
+```
 
+## Warning
+⚠️ This modifies critical system partitions. Backup first!
 
-### Screenshots
-- WebUI
-
-<p align="center">
-  <img src="./images/webui1.png" alt="WebUI 1" width="45%" style="margin-right:10px;">
-  <img src="./images/webui2.png" alt="WebUI 2" width="45%">
-</p>
-
-- CLI
-
-![CLI](./images/cli.png)
+## Credits
+- **Author**: @ars18-JTechForums
+- **Forked from**: rhythmcache/partition-backup
