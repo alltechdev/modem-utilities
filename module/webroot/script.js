@@ -572,6 +572,15 @@ async function flashAllBands(folderType, filesToFlash) {
                 
                 setTimeout(() => {
                     hideProgress();
+                    showConfirm(
+                        'Reboot Required',
+                        `${folderType} modem has been flashed successfully. Please reboot your device to apply the changes.`,
+                        () => {
+                            exec('reboot').catch(() => {
+                                alert('Please reboot manually to apply changes');
+                            });
+                        }
+                    );
                 }, 2000);
                 
             } catch (error) {

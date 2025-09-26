@@ -524,10 +524,28 @@ body {
   margin-bottom: 2px;
 }
 
+.credits-text a {
+  color: #0099FF;
+  text-decoration: none;
+}
+
+.credits-text a:hover {
+  text-decoration: underline;
+}
+
 .credits-subtext {
   font-size: 11px;
   color: var(--text-secondary);
   opacity: 0.8;
+}
+
+.credits-subtext a {
+  color: #0099FF;
+  text-decoration: none;
+}
+
+.credits-subtext a:hover {
+  text-decoration: underline;
 }
 
 /* Modals */

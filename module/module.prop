@@ -3,5 +3,4 @@ name=Modem Utilities
 version=1.0
 versionCode=1
 author=@ars18-JTechForums | Forked from rhythmcache/partition-backup
-description=Utility to backup and flash modem partitions on the Qin F21 Pro.
-
+description=Utility to backup and flash modem partitions on the Qin F21 Pro
