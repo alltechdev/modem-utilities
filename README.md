@@ -36,5 +36,3 @@ https://vimeo.com/1122534776?fl=pl&fe=sh
 ⚠️ This modifies critical system partitions. Backup first!
 
 **Forked from**: [rhythmcache/partition-backup](https://github.com/rhythmcache/partition-backup)
-
-https://github.com/alltechdev/modem-utilities
